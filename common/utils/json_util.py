@@ -33,7 +33,7 @@ def store_json_in_file(store_data, file_name, ensure_ascii=False):
     :return:
     """
     with open(file_name, 'w', encoding="utf-8") as p_file:
-        json.dump(store_data, p_file, ensure_ascii=ensure_ascii)
+        json.dump(store_data, p_file, indent=2, ensure_ascii=ensure_ascii)
 
 
 def get_json_data_from_file(file_name):
