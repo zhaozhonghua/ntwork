@@ -41,6 +41,9 @@ class ClientManager(metaclass=Singleton):
             raise ClientNotExists(guid)
         return client
 
+    def get_client_guid_list(self):
+        return list(self.__client_map.keys())
+
     def remove_client(self, guid):
         if guid in self.__client_map:
             del self.__client_map[guid]

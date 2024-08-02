@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-import uvicorn
 from functools import wraps
+
+import uvicorn
 from fastapi import FastAPI
-from mgr import ClientManager
-from down import get_local_path
-from exception import MediaNotExistsError, ClientNotExists
+
 import models
 import ntwork
+from down import get_local_path
+from exception import MediaNotExistsError, ClientNotExists
+from mgr import ClientManager
 
 
 def response_json(status=0, data=None, msg=""):
@@ -50,6 +52,14 @@ app = FastAPI(title="NtWork fastapi完整示例",
 async def client_create():
     guid = client_mgr.create_client()
     return response_json(1, {"guid": guid})
+
+
+@app.post("/client/guid/list", summary="获取当前已经创建的实例列表", tags=["Client"],
+          response_model=models.ResponseModel)
+@catch_exception()
+async def get_client_guid_list():
+    guid_list = client_mgr.get_client_guid_list()
+    return response_json(1, {"guid_list": guid_list})
 
 
 @app.post("/client/open", summary="打开企业微信", tags=["Client"],
