@@ -111,8 +111,9 @@ class WeWorkDataSync:
             if not self.skip_md5_check and last_md5 == this_md5:
                 print("room_members last_md5 and this_md5 same")
                 return
-        store_json_in_file(room_members, cache_room_member_json_file)
-        self.sync_rooms_notice(SyncEvent.SYNC_ROOM_MEMBER.value, room_members)
+        if room_members:
+            store_json_in_file(room_members, cache_room_member_json_file)
+            self.sync_rooms_notice(SyncEvent.SYNC_ROOM_MEMBER.value, room_members)
         return room_members
 
     def sync(self):
