@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+import argparse
+import codecs
 import enum
 import json
 import os
-import codecs
 import sys
 
 import requests
@@ -13,7 +14,6 @@ from setting import SAPIENTIA_APP_IDENTIFIER
 
 # 设置标准输出为UTF-8编码
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
-
 
 
 class SyncEvent(enum.Enum):
@@ -28,7 +28,7 @@ class WeWorkDataSync:
     headers = {
         "Content-Type": "application/json"
     }
-    skip_md5_check = True
+    skip_md5_check = False
 
     def get_guid(self):
         url = f"{self.host}/client/guid/list"
@@ -128,6 +128,15 @@ class WeWorkDataSync:
         self.sync_rooms()
 
 
+def get_args():
+    parser = argparse.ArgumentParser(description="WeWorkDataSync")
+    parser.add_argument("--skip_md5_check", default=False, action="store_true", help="skip_md5_check")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == '__main__':
+    args = get_args()
     w = WeWorkDataSync()
+    w.skip_md5_check = args.skip_md5_check
     w.sync()
