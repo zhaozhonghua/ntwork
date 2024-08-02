@@ -32,7 +32,7 @@ def store_json_in_file(store_data, file_name, ensure_ascii=False):
     :param ensure_ascii:
     :return:
     """
-    with open(file_name, 'w') as p_file:
+    with open(file_name, 'w', encoding="utf-8") as p_file:
         json.dump(store_data, p_file, ensure_ascii=ensure_ascii)
 
 
