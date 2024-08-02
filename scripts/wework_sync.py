@@ -10,7 +10,7 @@ import requests
 
 from common.utils import md5
 from common.utils.json_util import store_json_in_file, get_json_data_from_file
-from setting import SAPIENTIA_APP_IDENTIFIER
+from setting import SAPIENTIA_APP_IDENTIFIER, SAPIENTIA_HOST
 
 # 设置标准输出为UTF-8编码
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
@@ -23,7 +23,6 @@ class SyncEvent(enum.Enum):
 
 
 class WeWorkDataSync:
-    sapientia_host = "https://chat.walnutpa.com"
     host = "http://localhost:8000"
     headers = {
         "Content-Type": "application/json"
@@ -67,7 +66,7 @@ class WeWorkDataSync:
         return result.get("data")
 
     def sync_rooms_notice(self, event, data):
-        url = f"{self.sapientia_host}/api/app/utv/v1/sync/wework/data"
+        url = f"{SAPIENTIA_HOST}/api/app/utv/v1/sync/wework/data"
         headers = {
             "Content-type": "application/json",
             "Authorization": f"Token {SAPIENTIA_APP_IDENTIFIER}"

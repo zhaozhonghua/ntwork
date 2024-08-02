@@ -1,10 +1,39 @@
 # -*- coding: utf-8 -*-
-import ntwork
-import requests
 from typing import Dict, Union
-from ntwork.utils.singleton import Singleton
-from utils import generate_guid
+
+import requests
+
+import ntwork
 from exception import ClientNotExists
+from ntwork.utils.singleton import Singleton
+from setting import SAPIENTIA_APP_IDENTIFIER, SAPIENTIA_HOST
+from utils import generate_guid
+
+
+def bot_reply(message):
+    url = f"{SAPIENTIA_HOST}/api/app/utv/v1/agent/qa"
+    headers = {
+        "Content-type": "application/json",
+        "Authorization": f"Token {SAPIENTIA_APP_IDENTIFIER}"
+    }
+    data = message.get("data")
+    conversation_id = data.get("conversation_id")
+    context_id = conversation_id
+
+    end_user = data.get("send_name")
+    content = data.get("content")
+    params = {
+        "messages": [
+            {
+                "role": "user",
+                "content": content
+            }
+        ],
+        "context_id": context_id,
+        "end_user": end_user
+    }
+    result = requests.post(url, json=params, headers=headers).json()
+    return result.get("data", {}).get("answer", "")
 
 
 class ClientWeWork(ntwork.WeWork):
@@ -48,15 +77,16 @@ class ClientManager(metaclass=Singleton):
         if guid in self.__client_map:
             del self.__client_map[guid]
 
+    def reply(self, wework, message):
+        answer = bot_reply(message)
+        if answer:
+            conversation_id = message.get("data").get("conversation_id")
+            self.get_client(wework.guid).send_text(conversation_id, answer)
+
     def __on_callback(self, wework, message):
         if not self.callback_url:
             return
-
-        client_message = {
-            "guid": wework.guid,
-            "message": message
-        }
-        requests.post(self.callback_url, json=client_message)
+        self.reply(wework, message)
 
     def __on_quit_callback(self, wework):
         self.__on_callback(wework, {"type": ntwork.MT_RECV_WEWORK_QUIT_MSG, "data": {}})
