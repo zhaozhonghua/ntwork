@@ -1,12 +1,17 @@
 import enum
 import json
 import os
+import codecs
 
 import requests
 
 from common.utils import md5
 from common.utils.json_util import store_json_in_file, get_json_data_from_file
 from setting import SAPIENTIA_APP_IDENTIFIER
+
+# 设置标准输出为UTF-8编码
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
+
 
 
 class SyncEvent(enum.Enum):
