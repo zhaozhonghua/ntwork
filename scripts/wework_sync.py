@@ -1,5 +1,6 @@
 import enum
 import requests
+import os
 
 from common.utils import md5
 from common.utils.json_util import store_json_in_file, get_json_data_from_file
@@ -55,9 +56,10 @@ class WeWorkDataSync:
 
     def sync_rooms(self):
         page_num, page_size = 1, 500
-        cache_room_json_file = f"{page_num}_{page_size}_rooms.json"
-
-        cache_rooms = get_json_data_from_file(cache_room_json_file)
+        cache_room_json_file = f"C:\www\ntwork\data\{page_num}_{page_size}_rooms.json"
+        cache_rooms = {}
+        if os.path.exists(cache_room_json_file):
+            cache_rooms = get_json_data_from_file(cache_room_json_file)
         rooms = self.get_rooms(page_num, page_size)
         if cache_rooms:
             last_md5 = md5(cache_rooms)
