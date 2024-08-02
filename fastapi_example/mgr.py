@@ -32,6 +32,8 @@ def bot_reply(message):
         "context_id": context_id,
         "end_user": end_user
     }
+    print(headers)
+    print(params)
     result = requests.post(url, json=params, headers=headers).json()
     return result.get("data", {}).get("answer", "")
 
@@ -79,6 +81,7 @@ class ClientManager(metaclass=Singleton):
 
     def reply(self, wework, message):
         answer = bot_reply(message)
+        print(answer)
         if answer:
             conversation_id = message.get("data").get("conversation_id")
             self.get_client(wework.guid).send_text(conversation_id, answer)
