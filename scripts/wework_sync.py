@@ -105,6 +105,7 @@ class WeWorkDataSync:
         if os.path.exists(cache_room_member_json_file):
             cache_room_members = get_json_data_from_file(cache_room_member_json_file)
         room_members = self.get_room_members(conversation_id, page_num, page_size)
+        print(room_members)
         if cache_room_members:
             last_md5 = md5(json.dumps(cache_room_members))
             this_md5 = md5(json.dumps(room_members))
