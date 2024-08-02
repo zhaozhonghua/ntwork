@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import random
+import time
 from typing import Dict, Union
 
 import requests
@@ -81,6 +83,7 @@ class ClientManager(metaclass=Singleton):
             del self.__client_map[guid]
 
     def reply(self, wework, message):
+        receive_start_time = int(time.time())
         logger.info("login_user_id:%s message:%s", self.login_user_id, message)
         msg_type = message.get("type")
         if msg_type == notify_type.MT_USER_LOGIN_MSG:
@@ -97,6 +100,11 @@ class ClientManager(metaclass=Singleton):
         sender = message.get("data").get("sender")
         if sender == self.login_user_id:
             return
+        diff = int(time.time()) - receive_start_time
+        if diff < 10:
+            wait_seconds = random.randint(3, 8)
+            logger.info("wait_seconds:%s", wait_seconds)
+            time.sleep(wait_seconds)
         send_at_list = [sender]
         self.get_client(wework.guid).send_room_at_msg(conversation_id, answer, send_at_list)
 
