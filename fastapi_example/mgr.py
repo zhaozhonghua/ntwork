@@ -87,9 +87,10 @@ class ClientManager(metaclass=Singleton):
             self.get_client(wework.guid).send_text(conversation_id, answer)
 
     def __on_callback(self, wework, message):
-        if not self.callback_url:
-            return
-        self.reply(wework, message)
+        try:
+            self.reply(wework, message)
+        except Exception as e:
+            print(e)
 
     def __on_quit_callback(self, wework):
         self.__on_callback(wework, {"type": ntwork.MT_RECV_WEWORK_QUIT_MSG, "data": {}})
