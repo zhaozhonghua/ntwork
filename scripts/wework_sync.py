@@ -1,6 +1,7 @@
 import enum
 import requests
 import os
+import json
 
 from common.utils import md5
 from common.utils.json_util import store_json_in_file, get_json_data_from_file
@@ -19,6 +20,7 @@ class WeWorkDataSync:
     headers = {
         "Content-Type": "application/json"
     }
+    skip_md5_check = False
 
     def get_guid(self):
         url = f"{self.host}/client/guid/list"
@@ -62,9 +64,9 @@ class WeWorkDataSync:
             cache_rooms = get_json_data_from_file(cache_room_json_file)
         rooms = self.get_rooms(page_num, page_size)
         if cache_rooms:
-            last_md5 = md5(cache_rooms)
-            this_md5 = md5(rooms)
-            if last_md5 == this_md5:
+            last_md5 = md5(json.dumps(cache_rooms))
+            this_md5 = md5(json.dumps(rooms))
+            if not self.skip_md5_check and last_md5 == this_md5:
                 print("last_md5 and this_md5 same")
                 return
         store_json_in_file(rooms, cache_room_json_file)
