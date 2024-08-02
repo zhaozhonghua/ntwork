@@ -42,7 +42,7 @@ def get_json_data_from_file(file_name):
     :param file_name: /xx/xxx/xx.json
     :return:
     """
-    with open(file_name, 'r') as p_file:
+    with open(file_name, 'r', encoding="utf-8") as p_file:
         return json.load(p_file)
 
 
