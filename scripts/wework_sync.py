@@ -137,6 +137,7 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
+    print(args)
     w = WeWorkDataSync()
     w.skip_md5_check = args.skip_md5_check
     w.sync()
