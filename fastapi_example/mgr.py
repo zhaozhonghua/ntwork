@@ -2,9 +2,11 @@
 from typing import Dict, Union
 
 import requests
+from fastapi.logger import logger
 
 import ntwork
 from exception import ClientNotExists
+from ntwork.const import notify_type
 from ntwork.utils.singleton import Singleton
 from setting import SAPIENTIA_APP_IDENTIFIER, SAPIENTIA_HOST
 from utils import generate_guid
@@ -32,8 +34,6 @@ def bot_reply(message):
         "context_id": context_id,
         "end_user": end_user
     }
-    print(headers)
-    print(params)
     result = requests.post(url, json=params, headers=headers).json()
     return result.get("data", {}).get("answer", "")
 
@@ -45,6 +45,7 @@ class ClientWeWork(ntwork.WeWork):
 class ClientManager(metaclass=Singleton):
     __client_map: Dict[str, ntwork.WeWork] = {}
     callback_url: str = ""
+    login_user_id: str = ""
 
     def new_guid(self):
         """
@@ -80,11 +81,24 @@ class ClientManager(metaclass=Singleton):
             del self.__client_map[guid]
 
     def reply(self, wework, message):
+        logger.info("login_user_id:%s message:%s", self.login_user_id, message)
+        msg_type = message.get("type")
+        if msg_type == notify_type.MT_USER_LOGIN_MSG:
+            login_user_id = message.get("data").get("user_id")
+            self.login_user_id = login_user_id
+            return
+        if msg_type not in [notify_type.MT_RECV_TEXT_MSG]:
+            return
         answer = bot_reply(message)
-        print(answer)
-        if answer:
-            conversation_id = message.get("data").get("conversation_id")
-            self.get_client(wework.guid).send_text(conversation_id, answer)
+        logger.info("answer:%s", answer)
+        if not answer:
+            return
+        conversation_id = message.get("data").get("conversation_id")
+        sender = message.get("data").get("sender")
+        if sender == self.login_user_id:
+            return
+        send_at_list = [sender]
+        self.get_client(wework.guid).send_room_at_msg(conversation_id, answer, send_at_list)
 
     def __on_callback(self, wework, message):
         try:
