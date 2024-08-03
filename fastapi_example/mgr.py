@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import random
+import re
 import time
 from typing import Dict, Union
 
@@ -26,6 +27,8 @@ def bot_reply(message):
 
     end_user = data.get("send_name")
     content = data.get("content")
+    if "@" in content:
+        content = re.sub(r'@\S+\s*', '', content)
     params = {
         "messages": [
             {
@@ -86,27 +89,33 @@ class ClientManager(metaclass=Singleton):
         receive_start_time = int(time.time())
         logger.info("login_user_id:%s message:%s", self.login_user_id, message)
         msg_type = message.get("type")
+        conversation_id = message.get("data").get("conversation_id")
+        receiver = message.get("data").get("receiver")
+        sender = message.get("data").get("sender")
+        at_list = message.get("data").get("at_list")
         if msg_type == notify_type.MT_USER_LOGIN_MSG:
             login_user_id = message.get("data").get("user_id")
             self.login_user_id = login_user_id
             return
         if msg_type not in [notify_type.MT_RECV_TEXT_MSG]:
             return
+        at_user_ids = [at["user_id"] for at in at_list]
+        if self.login_user_id not in at_user_ids:
+            return
+        if receiver != self.login_user_id:
+            return
         answer = bot_reply(message)
         logger.info("answer:%s", answer)
         if not answer:
             return
-        conversation_id = message.get("data").get("conversation_id")
-        sender = message.get("data").get("sender")
-        if sender == self.login_user_id:
-            return
+        reply_content = f" {answer}"
         diff = int(time.time()) - receive_start_time
         if diff < 10:
             wait_seconds = random.randint(3, 8)
             logger.info("wait_seconds:%s", wait_seconds)
             time.sleep(wait_seconds)
         send_at_list = [sender]
-        self.get_client(wework.guid).send_room_at_msg(conversation_id, answer, send_at_list)
+        self.get_client(wework.guid).send_room_at_msg(conversation_id, reply_content, send_at_list)
 
     def __on_callback(self, wework, message):
         try:
