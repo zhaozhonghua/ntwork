@@ -78,7 +78,7 @@ class WeWorkDataSync:
         room_list = rooms.get("room_list") or []
         send_data = {
             "type": send_type.MT_GET_ROOMS_MSG,
-            "message": room_list
+            "data": rooms
         }
         self.sap_api.sync_wework_event_data_notice(guid, send_data)
         for room in room_list:
@@ -109,7 +109,7 @@ class WeWorkDataSync:
         store_json_in_file(room_members, cache_room_member_json_file)
         send_data = {
             "type": send_type.MT_GET_ROOM_MEMBERS_MSG,
-            "message": room_members
+            "data": room_members
         }
         self.sap_api.sync_wework_event_data_notice(guid, send_data)
         return room_members
