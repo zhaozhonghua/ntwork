@@ -12,6 +12,7 @@ from ntwork.const import notify_type
 from ntwork.utils.singleton import Singleton
 from sapientia_api import SapientiaApi
 from utils import generate_guid
+from setting import SAPIENTIA_ACCOUNT_SECRET_KEY, SAPIENTIA_HOST
 
 
 class ClientWeWork(ntwork.WeWork):
@@ -23,7 +24,7 @@ class ClientManager(metaclass=Singleton):
     callback_url: str = ""
     login_user_id: str = ""
 
-    sap_api = SapientiaApi()
+    sap_api = SapientiaApi(SAPIENTIA_HOST, SAPIENTIA_ACCOUNT_SECRET_KEY)
 
     def new_guid(self):
         """

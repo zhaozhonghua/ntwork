@@ -2,16 +2,13 @@
 
 import requests
 
-from setting import SAPIENTIA_ACCOUNT_SECRET_KEY, SAPIENTIA_HOST
-
-
 class SapientiaApi:
 
-    def __init__(self):
-        self.host = SAPIENTIA_HOST
+    def __init__(self, host, token):
+        self.host = host
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Token {SAPIENTIA_ACCOUNT_SECRET_KEY}",
+            "Authorization": f"Token {token}",
         }
 
     def sync_wework_event_data_notice(self, guid, message):
