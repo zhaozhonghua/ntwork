@@ -4,43 +4,14 @@ import re
 import time
 from typing import Dict, Union
 
-import requests
 from fastapi.logger import logger
 
 import ntwork
 from exception import ClientNotExists
 from ntwork.const import notify_type
 from ntwork.utils.singleton import Singleton
-from setting import SAPIENTIA_APP_IDENTIFIER, SAPIENTIA_HOST
+from sapientia_api import SapientiaApi
 from utils import generate_guid
-
-
-def bot_reply(message):
-    url = f"{SAPIENTIA_HOST}/api/app/utv/v1/agent/qa"
-    headers = {
-        "Content-type": "application/json",
-        "Authorization": f"Token {SAPIENTIA_APP_IDENTIFIER}"
-    }
-    data = message.get("data")
-    conversation_id = data.get("conversation_id")
-    context_id = conversation_id
-
-    end_user = data.get("send_name")
-    content = data.get("content")
-    if "@" in content:
-        content = re.sub(r'@\S+\s*', '', content)
-    params = {
-        "messages": [
-            {
-                "role": "user",
-                "content": content
-            }
-        ],
-        "context_id": context_id,
-        "end_user": end_user
-    }
-    result = requests.post(url, json=params, headers=headers).json()
-    return result.get("data", {}).get("answer", "")
 
 
 class ClientWeWork(ntwork.WeWork):
@@ -51,6 +22,8 @@ class ClientManager(metaclass=Singleton):
     __client_map: Dict[str, ntwork.WeWork] = {}
     callback_url: str = ""
     login_user_id: str = ""
+
+    sap_api = SapientiaApi()
 
     def new_guid(self):
         """
@@ -86,13 +59,20 @@ class ClientManager(metaclass=Singleton):
             del self.__client_map[guid]
 
     def reply(self, wework, message):
+        try:
+            self.sap_api.sync_wework_event_data_notice(wework.guid, message)
+        except Exception as e:
+            logger.exception(e)
         receive_start_time = int(time.time())
         logger.info("login_user_id:%s message:%s", self.login_user_id, message)
         msg_type = message.get("type")
-        conversation_id = message.get("data").get("conversation_id")
-        receiver = message.get("data").get("receiver")
-        sender = message.get("data").get("sender")
-        at_list = message.get("data").get("at_list")
+        data = message.get("data") or {}
+        conversation_id = data.get("conversation_id")
+        receiver = data.get("receiver")
+        sender = data.get("sender")
+        at_list = data.get("at_list")
+        end_user = data.get("send_name")
+        content = data.get("content")
         if msg_type == notify_type.MT_USER_LOGIN_MSG:
             login_user_id = message.get("data").get("user_id")
             self.login_user_id = login_user_id
@@ -104,7 +84,9 @@ class ClientManager(metaclass=Singleton):
             return
         if receiver != self.login_user_id:
             return
-        answer = bot_reply(message)
+        if "@" in content:
+            content = re.sub(r'@\S+\s*', '', content)
+        answer = self.sap_api.bot_reply(content, conversation_id, end_user)
         logger.info("answer:%s", answer)
         if not answer:
             return

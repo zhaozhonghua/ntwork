@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import argparse
 import codecs
-import enum
 import json
 import os
 import sys
@@ -10,16 +9,11 @@ import requests
 
 from common.utils import md5
 from common.utils.json_util import store_json_in_file, get_json_data_from_file
-from fastapi_example.setting import SAPIENTIA_APP_IDENTIFIER, SAPIENTIA_HOST
+from fastapi_example.sapientia_api import SapientiaApi
+from ntwork.const import send_type
 
 # 设置标准输出为UTF-8编码
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
-
-
-class SyncEvent(enum.Enum):
-    SYNC_ROOM = "sync_room"
-    SYNC_ROOM_MEMBER = "sync_room_member"
-    SYNC_CHAT_RECORD = "sync_chat_record"
 
 
 class WeWorkDataSync:
@@ -28,6 +22,7 @@ class WeWorkDataSync:
         "Content-Type": "application/json"
     }
     skip_md5_check = False
+    sap_api = SapientiaApi()
 
     def get_guid(self):
         url = f"{self.host}/client/guid/list"
@@ -36,11 +31,7 @@ class WeWorkDataSync:
         guid_list = data.get("guid_list")
         return guid_list[0] if guid_list else ""
 
-    def get_rooms(self, page_num=1, page_size=500):
-        guid = self.get_guid()
-        if not guid:
-            print("invalid get guid")
-            raise ValueError("invalid get guid")
+    def get_rooms(self, guid, page_num=1, page_size=500):
         url = f"{self.host}/room/get_rooms"
         params = {
             "guid": guid,
@@ -50,11 +41,7 @@ class WeWorkDataSync:
         result = requests.post(url, json=params, headers=self.headers).json()
         return result.get("data")
 
-    def get_room_members(self, conversation_id, page_num, page_size):
-        guid = self.get_guid()
-        if not guid:
-            print("invalid get guid")
-            raise ValueError("invalid get guid")
+    def get_room_members(self, guid, conversation_id, page_num, page_size):
         url = f"{self.host}/room/get_room_members"
         params = {
             "guid": guid,
@@ -65,26 +52,17 @@ class WeWorkDataSync:
         result = requests.post(url, json=params, headers=self.headers).json()
         return result.get("data")
 
-    def sync_rooms_notice(self, event, data):
-        url = f"{SAPIENTIA_HOST}/api/app/utv/v1/sync/wework/data"
-        headers = {
-            "Content-type": "application/json",
-            "Authorization": f"Token {SAPIENTIA_APP_IDENTIFIER}"
-        }
-        params = {
-            "event": event,
-            "data": data,
-        }
-        result = requests.post(url, json=params, headers=headers).json()
-        print("sync_rooms_notice result:", result)
-
     def sync_rooms(self):
+        guid = self.get_guid()
+        if not guid:
+            print("invalid get guid")
+            raise ValueError("invalid get guid")
         page_num, page_size = 1, 500
         cache_room_json_file = f"C:/www/ntwork/data/{page_num}_{page_size}_rooms.json"
         cache_rooms = {}
         if os.path.exists(cache_room_json_file):
             cache_rooms = get_json_data_from_file(cache_room_json_file)
-        rooms = self.get_rooms(page_num, page_size)
+        rooms = self.get_rooms(guid, page_num, page_size)
         if cache_rooms:
             last_md5 = md5(json.dumps(cache_rooms))
             this_md5 = md5(json.dumps(rooms))
@@ -92,25 +70,29 @@ class WeWorkDataSync:
                 print("rooms last_md5 and this_md5 same")
                 return
         store_json_in_file(rooms, cache_room_json_file)
-        self.sync_rooms_notice(SyncEvent.SYNC_ROOM.value, rooms)
+        send_data = {
+            "type": send_type.MT_GET_ROOMS_MSG,
+            "message": rooms
+        }
+        self.sap_api.sync_wework_event_data_notice(guid, send_data)
         room_list = rooms.get("room_list") or []
         for room in room_list:
             conversation_id = room.get("conversation_id") or ""
             if not conversation_id:
                 continue
             print("sync room members conversation_id:", conversation_id)
-            room_members = self.sync_room_members(conversation_id)
+            room_members = self.sync_room_members(guid, conversation_id)
             print(room_members)
         return rooms
 
-    def sync_room_members(self, conversation_id):
+    def sync_room_members(self, guid, conversation_id):
         page_num, page_size = 1, 500
         room_id = conversation_id.replace(":", "_")
         cache_room_member_json_file = f"C:/www/ntwork/data/{room_id}_{page_num}_{page_size}_room_members.json"
         cache_room_members = {}
         if os.path.exists(cache_room_member_json_file):
             cache_room_members = get_json_data_from_file(cache_room_member_json_file)
-        room_members = self.get_room_members(conversation_id, page_num, page_size)
+        room_members = self.get_room_members(guid, conversation_id, page_num, page_size)
         print(room_members)
         if cache_room_members:
             last_md5 = md5(json.dumps(cache_room_members))
@@ -120,7 +102,11 @@ class WeWorkDataSync:
                 return
         if room_members:
             store_json_in_file(room_members, cache_room_member_json_file)
-            self.sync_rooms_notice(SyncEvent.SYNC_ROOM_MEMBER.value, room_members)
+            send_data = {
+                "type": send_type.MT_GET_ROOM_MEMBERS_MSG,
+                "message": room_members
+            }
+            self.sap_api.sync_wework_event_data_notice(guid, send_data)
         return room_members
 
     def sync(self):
