@@ -10,8 +10,9 @@ import requests
 from common.utils import md5
 from common.utils.json_util import store_json_in_file, get_json_data_from_file
 from fastapi_example.sapientia_api import SapientiaApi
-from ntwork.const import send_type
 from fastapi_example.setting import SAPIENTIA_ACCOUNT_SECRET_KEY, SAPIENTIA_HOST
+import ntwork
+from ntwork.const import send_type
 
 # 设置标准输出为UTF-8编码
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
