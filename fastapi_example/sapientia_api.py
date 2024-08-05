@@ -2,7 +2,7 @@
 
 import requests
 
-from fastapi_example.setting import SAPIENTIA_ACCOUNT_SECRET_KEY, SAPIENTIA_HOST
+from setting import SAPIENTIA_ACCOUNT_SECRET_KEY, SAPIENTIA_HOST
 
 
 class SapientiaApi:
