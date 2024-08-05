@@ -58,8 +58,8 @@ async def client_create():
           response_model=models.ResponseModel)
 @catch_exception()
 async def get_client_guid_list():
-    guid_list = client_mgr.get_client_guid_list()
-    return response_json(1, {"guid_list": guid_list})
+    data = client_mgr.get_client_guid_list()
+    return response_json(1, data)
 
 
 @app.post("/client/open", summary="打开企业微信", tags=["Client"],

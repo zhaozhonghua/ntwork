@@ -53,7 +53,10 @@ class ClientManager(metaclass=Singleton):
         return client
 
     def get_client_guid_list(self):
-        return list(self.__client_map.keys())
+        return dict(
+            guid_list=list(self.__client_map.keys()),
+            login_user_id=self.login_user_id
+        )
 
     def remove_client(self, guid):
         if guid in self.__client_map:
