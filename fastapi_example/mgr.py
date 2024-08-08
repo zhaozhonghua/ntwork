@@ -109,7 +109,7 @@ class ClientManager(metaclass=Singleton):
         elif "file_id" in data["cdn"].keys():
             if message["type"] == notify_type.MT_RECV_IMAGE_MSG:
                 file_type = 2
-            elif message["type"] == notify_type.MT_RECV_FILE_MSG:
+            elif message["type"] in [notify_type.MT_RECV_FILE_MSG, notify_type.MT_RECV_VOICE_MSG]:
                 file_type = 5
             else:
                 logger.warning("not exist file_id")
@@ -130,7 +130,7 @@ class ClientManager(metaclass=Singleton):
             base_name, _ = os.path.splitext(save_path)
             local_file = f"{base_name}.wav"
             pilk.silk_to_wav(save_path, local_file, rate=24000)
-            os.remove(save_path)
+            # os.remove(save_path)
         oss_key = f"file/wework/receive/file/{file_name}"
         file_url = AliyunOssUtil.put_object_from_file(local_file, oss_key)
         return file_url
