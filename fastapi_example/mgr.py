@@ -32,7 +32,7 @@ class ClientWeWork(ntwork.WeWork):
             'size': size,
             'save_path': save_path
         }
-        return self.__send_sync(send_type.MT_WXCDN_DOWNLOAD_MSG, data)
+        return self._ClientWeWork__send_sync(send_type.MT_WXCDN_DOWNLOAD_MSG, data)
 
 
 class ClientManager(metaclass=Singleton):
