@@ -130,7 +130,7 @@ class ClientManager(metaclass=Singleton):
             base_name, _ = os.path.splitext(save_path)
             local_file = f"{base_name}.wav"
             pilk.silk_to_wav(save_path, local_file, rate=24000)
-            # os.remove(save_path)
+            os.remove(save_path)
         oss_key = f"file/wework/receive/file/{file_name}"
         file_url = AliyunOssUtil.put_object_from_file(local_file, oss_key)
         return file_url
@@ -146,11 +146,8 @@ class ClientManager(metaclass=Singleton):
             data["file_url"] = file_url
         if msg_type == notify_type.MT_RECV_VOICE_MSG:
             download_file_name = f"{uuid.uuid4().hex}.silk"
-            base_name, _ = os.path.splitext(download_file_name)
-            file_name_2 = base_name + ".wav"
-            current_dir = os.getcwd()
-            self.content = os.path.join(current_dir, "tmp", file_name_2)
-            self._prepare_fn = lambda: c2c_download_and_convert(wework, wework_msg, file_name)
+            file_url = self.download_cdn_file(client_wework, c_message, download_file_name)
+            data["file_url"] = file_url
         if msg_type == notify_type.MT_RECV_FILE_MSG:
             pass
         if msg_type == notify_type.MT_RECV_VIDEO_MSG:
