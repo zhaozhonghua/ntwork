@@ -150,9 +150,14 @@ class ClientManager(metaclass=Singleton):
             file_url = self.download_cdn_file(client_wework, c_message, download_file_name)
             data["file_url"] = file_url
         if msg_type == notify_type.MT_RECV_FILE_MSG:
-            pass
+            extension = os.path.splitext(data["cdn"]["file_name"])[-1]
+            download_file_name = f"{uuid.uuid4().hex}{extension}"
+            file_url = self.download_cdn_file(client_wework, c_message, download_file_name)
+            data["file_url"] = file_url
         if msg_type == notify_type.MT_RECV_VIDEO_MSG:
-            pass
+            download_file_name = f"{uuid.uuid4().hex}.mp4"
+            file_url = self.download_cdn_file(client_wework, c_message, download_file_name)
+            data["file_url"] = file_url
         return c_message
 
     def report_message(self, wework, message):
