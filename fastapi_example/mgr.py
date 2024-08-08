@@ -130,7 +130,8 @@ class ClientManager(metaclass=Singleton):
             base_name, _ = os.path.splitext(save_path)
             local_file = f"{base_name}.wav"
             pilk.silk_to_wav(save_path, local_file, rate=24000)
-            # os.remove(save_path)
+            os.remove(save_path)
+            file_name = file_name.replace(".silk", ".wav")
         oss_key = f"file/wework/receive/file/{file_name}"
         file_url = AliyunOssUtil.put_object_from_file(local_file, oss_key)
         return file_url
