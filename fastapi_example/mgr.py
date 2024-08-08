@@ -16,6 +16,7 @@ from ntwork.utils.singleton import Singleton
 from sapientia_api import SapientiaApi
 from utils import generate_guid
 from setting import SAPIENTIA_ACCOUNT_SECRET_KEY, SAPIENTIA_HOST
+from oss_util import AliyunOssUtil
 
 
 class ClientWeWork(ntwork.WeWork):
@@ -120,14 +121,22 @@ class ClientManager(metaclass=Singleton):
         msg = f"download_cdn_file result: {result}"
         logger.debug(msg)
         print(msg)
+        local_file = result.get("save_path") or ""
+        if not local_file:
+            return
+        oss_key = f"file/wework/receive/file/{file_name}"
+        file_url = AliyunOssUtil.put_object_from_file(local_file, oss_key)
+        return file_url
 
     def convert_message(self, wework, message):
         c_message = copy.deepcopy(message)
+        data = c_message.get("data") or {}
         client_wework = self.get_client(wework.guid)
         msg_type = c_message.get("type")
         if msg_type == notify_type.MT_RECV_IMAGE_MSG:
             download_file_name = f"{uuid.uuid4().hex}.jpg"
-            self.download_cdn_file(client_wework, c_message, download_file_name)
+            file_url = self.download_cdn_file(client_wework, c_message, download_file_name)
+            data["file_url"] = file_url
         if msg_type == notify_type.MT_RECV_VOICE_MSG:
             pass
         if msg_type == notify_type.MT_RECV_FILE_MSG:
