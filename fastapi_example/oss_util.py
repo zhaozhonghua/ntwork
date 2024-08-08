@@ -20,4 +20,4 @@ class AliyunOssUtil:
     @staticmethod
     def put_object_from_file(local_file, oss_key, is_internal=False):
         AliyunOssUtil.bucket(is_internal=is_internal).put_object_from_file(oss_key, local_file)
-        return f"{setting.oss_public_bucket}/{oss_key}"
+        return f"{setting.oss_public_bucket['endpoint']}/{oss_key}"
